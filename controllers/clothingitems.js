@@ -43,23 +43,24 @@ const createItem = (req, res) => {
 
 const deleteItem = (req, res) => {
   const { itemId } = req.params;
+
   ClothingItems.findByIdAndRemove(itemId)
     .orFail()
     .then((item) => res.status(200).send(item))
     .catch((err) => {
       if (err.name === "CastError") {
-        res.status(INVALID_DATA).send({ message: "Invalid data" });
-      } else if (err.name === "DocumentNotFoundError") {
-        res
+        return res.status(INVALID_DATA).send({ message: "Invalid data" });
+      }
+
+      if (err.name === "DocumentNotFoundError") {
+        return res
           .status(INVALID_ENDPOINT)
           .send({ message: "Requested resource not found" });
-      } else if (err.name === "CastError") {
-        res.status(INVALID_DATA).send({ message: "Invalid data" });
-      } else {
-        res
-          .status(SERVER_ERROR)
-          .send({ message: "An error has occurred on the server." });
       }
+
+      return res
+        .status(SERVER_ERROR)
+        .send({ message: "An error has occurred on the server." });
     });
 };
 

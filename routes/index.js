@@ -2,14 +2,15 @@ const router = require("express").Router();
 const userRouter = require("./users");
 const itemRouter = require("./clothingitems");
 
+// Users routes
 router.use("/users", userRouter);
+
+// Items routes
 router.use("/items", itemRouter);
 
-// we create a catch all
-// function that allows us to account for all other
-// routes
+// Catch-all route for undefined endpoints
 router.use((req, res) => {
-  res.status(INVALID_ENDPOINT).send({
+  res.status(404).send({
     message: "Requested resource not found",
   });
 });
