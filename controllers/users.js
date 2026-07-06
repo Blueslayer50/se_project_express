@@ -1,65 +1,101 @@
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const User = require("../models/user");
-const {
-  INVALID_DATA,
-  INVALID_ENDPOINT,
-  SERVER_ERROR,
-} = require("../utils/errors");
+const { JWT_SECRET } = require("../utils/config");
+const BadRequestError = require("../utils/Errors/BadRequestError");
+const ConflictError = require("../utils/Errors/ConflictError");
+const NotFoundError = require("../utils/Errors/NotFoundError");
 
-const getUsers = (req, res) => {
+const getUsers = (req, res, next) => {
   User.find({})
-    .then((users) => res.status(200).send(users))
-    .catch((err) => {
-      console.log(err);
-      if (err.name === "DocumentNotFoundError") {
-        res
-          .status(INVALID_ENDPOINT)
-          .send({ message: "Requested resource not found" });
-      } else {
-        res
-          .status(SERVER_ERROR)
-          .send({ message: "An error has occurred on the server." });
-      }
-    });
+    .then((users) => res.send(users))
+    .catch(next);
 };
 
-const createUser = (req, res) => {
-  const { name, avatar } = req.body;
-  User.create({ name, avatar })
-    .then((user) => res.status(201).send(user))
+const createUser = (req, res, next) => {
+  const { name, avatar, email, password } = req.body;
+
+  bcrypt
+    .hash(password, 10)
+    .then((hash) => User.create({ name, avatar, email, password: hash }))
+    .then((user) => {
+      res.status(201).send({
+        name: user.name,
+        email: user.email,
+        avatar: user.avatar,
+      });
+    })
     .catch((err) => {
-      console.error(err);
       if (err.name === "ValidationError") {
-        res.status(INVALID_DATA).send({ message: "Invalid data" });
-      } else {
-        res
-          .status(SERVER_ERROR)
-          .send({ message: "An error has occurred on the server." });
+        return next(new BadRequestError("The data entered is invalid."));
       }
+      if (err.code === 11000) {
+        return next(new ConflictError("Email already exists."));
+      }
+      return next(err);
     });
 };
 
-const getUser = (req, res) => {
-  User.findById(req.params.userId)
-    .orFail()
-    .then((user) => res.status(200).send(user))
+const loginUser = (req, res, next) => {
+  User.findUserByCredentials(req.body.email, req.body.password)
+    .then((user) => {
+      const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
+        expiresIn: "7d",
+      });
+      const { name, email, avatar, _id } = user;
+      res.send({ token, name, email, avatar, _id });
+    })
     .catch((err) => {
-      console.error(err);
-      if (err.name === "CastError") {
-        res.status(INVALID_DATA).send({ message: "Invalid data" });
-      } else if (err.name === "DocumentNotFoundError") {
-        res
-          .status(INVALID_ENDPOINT)
-          .send({ message: "Requested resource not found" });
-      } else {
-        res
-          .status(SERVER_ERROR)
-          .send({ message: "An error has occurred on the server." });
+      if (err.name === "InvalidData") {
+        return next(new BadRequestError("Invalid username or password"));
       }
+      return next(err);
+    });
+};
+
+const getCurrentUser = (req, res, next) => {
+  User.findById(req.user._id)
+    .orFail()
+    .then((user) => res.send(user))
+    .catch((err) => {
+      if (err.name === "CastError") {
+        return next(new BadRequestError("Invalid data format."));
+      }
+      if (err.name === "DocumentNotFoundError") {
+        return next(new NotFoundError("User not found."));
+      }
+      return next(err);
+    });
+};
+
+const updateProfile = (req, res, next) => {
+  const { avatar, name } = req.body;
+
+  User.findByIdAndUpdate(
+    req.user._id,
+    { avatar, name },
+    { new: true, runValidators: true },
+  )
+    .orFail()
+    .then((user) => res.send(user))
+    .catch((err) => {
+      if (err.name === "CastError") {
+        return next(new BadRequestError("Invalid Data"));
+      }
+      if (err.name === "DocumentNotFoundError") {
+        return next(new NotFoundError("User not found."));
+      }
+      if (err.name === "ValidationError") {
+        return next(new BadRequestError(err.message));
+      }
+      return next(err);
     });
 };
 
 module.exports = {
   getUsers,
   createUser,
-  getUser,
+  updateProfile,
+  getCurrentUser,
+  loginUser,
 };
