@@ -1,9 +1,11 @@
 const itemRouter = require("express").Router();
-const { authorize } = require("../middlewares/auth");
+
+const { authorize } = require("../middleware/auth");
+
 const {
   validateItemID,
   validateCardBody,
-} = require("../middlewares/validation");
+} = require("../middleware/validation");
 
 const {
   getItems,

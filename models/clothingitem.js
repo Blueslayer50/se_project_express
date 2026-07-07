@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
 
-const ClothingItem = mongoose.Schema({
+const clothingItemSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
@@ -30,6 +30,7 @@ const ClothingItem = mongoose.Schema({
   },
   likes: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: "user" }],
+    default: [],
   },
   createdAt: {
     type: Date,
@@ -37,4 +38,4 @@ const ClothingItem = mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model("clothingitem", ClothingItem);
+module.exports = mongoose.model("clothingItem", clothingItemSchema);

@@ -1,10 +1,15 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
-const { JWT_SECRET } = require("../utils/config");
-const BadRequestError = require("../utils/Errors/BadRequestError");
-const ConflictError = require("../utils/Errors/ConflictError");
-const NotFoundError = require("../utils/Errors/NotFoundError");
+
+const { JWT_SECRET } = process.env;
+
+const {
+  BadRequestError,
+  ConflictError,
+  NotFoundError,
+  UnauthorizedError,
+} = require("../utils/errors");
 
 const getUsers = (req, res, next) => {
   User.find({})
@@ -47,7 +52,7 @@ const loginUser = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === "InvalidData") {
-        return next(new BadRequestError("Invalid username or password"));
+        return next(new UnauthorizedError("Incorrect email or password"));
       }
       return next(err);
     });
