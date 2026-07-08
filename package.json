@@ -11,8 +11,13 @@
   },
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "celebrate": "^15.0.3",
     "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
     "express": "^4.19.1",
+    "helmet": "^8.2.0",
+    "jsonwebtoken": "^9.0.3",
     "mongoose": "^6.6.1",
     "validator": "^13.15.35"
   },
