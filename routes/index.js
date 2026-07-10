@@ -1,26 +1,25 @@
-const itemRouter = require("express").Router();
-const { authorize } = require("../middleware/auth");
+const router = require("express").Router();
+
+const userRouter = require("./users");
+const itemRouter = require("./clothingitems");
+
+const { loginUser, createUser } = require("../controllers/users");
 
 const {
-  validateItemID,
-  validateCardBody,
+  validateUserLogin,
+  validateUserRegister,
 } = require("../middleware/validation");
 
-const {
-  getItems,
-  createItem,
-  deleteItem,
-  addLike,
-  deleteLike,
-} = require("../controllers/clothingitems");
+const { NotFoundError } = require("../utils/errors");
 
-itemRouter.get("/", getItems);
+router.post("/signup", validateUserRegister, createUser);
+router.post("/signin", validateUserLogin, loginUser);
 
-itemRouter.use(authorize);
+router.use("/users", userRouter);
+router.use("/items", itemRouter);
 
-itemRouter.post("/", validateCardBody, createItem);
-itemRouter.delete("/:itemId", validateItemID, deleteItem);
-itemRouter.put("/:itemId/likes", validateItemID, addLike);
-itemRouter.delete("/:itemId/likes", validateItemID, deleteLike);
+router.use((req, res, next) => {
+  next(new NotFoundError("The requested resource was not found."));
+});
 
-module.exports = itemRouter;
+module.exports = router;

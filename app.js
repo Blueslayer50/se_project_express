@@ -7,6 +7,7 @@ const mainRouter = require("./routes/index");
 require("dotenv").config();
 
 const app = express();
+
 const { PORT = 3001, MONGO_URL = "mongodb://127.0.0.1:27017/wtwr_db" } =
   process.env;
 
@@ -28,6 +29,14 @@ app.get("/crash-test", () => {
 app.use(mainRouter);
 
 app.use(errors());
+
+app.use((err, req, res, next) => {
+  const { statusCode = 500, message } = err;
+  res.status(statusCode).send({
+    message:
+      statusCode === 500 ? "An error has occurred on the server." : message,
+  });
+});
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
