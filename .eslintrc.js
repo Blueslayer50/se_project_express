@@ -11,5 +11,9 @@ module.exports = {
   rules: {
     "no-underscore-dangle": ["error", { allow: ["_id"] }],
     "no-unused-vars": ["error", { argsIgnorePattern: "next" }],
+    "no-console": "off",
+    "func-names": "off",
+    "max-classes-per-file": "off",
+    "import/no-unresolved": "off",
   },
 };
