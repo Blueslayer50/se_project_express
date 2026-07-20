@@ -5,6 +5,7 @@ const helmet = require("helmet");
 const { errors } = require("celebrate");
 const mainRouter = require("./routes/index");
 require("dotenv").config();
+mongoose.set("strictQuery", true);
 
 const app = express();
 
