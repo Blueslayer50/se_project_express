@@ -1,4 +1,4 @@
-const ClothingItems = require("../models/clothingitem.js");
+const ClothingItems = require("../models/clothingitem");
 
 const {
   BadRequestError,

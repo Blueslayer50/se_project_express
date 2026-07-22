@@ -11,12 +11,6 @@ const {
   UnauthorizedError,
 } = require("../utils/errors");
 
-const getUsers = (req, res, next) => {
-  User.find({})
-    .then((users) => res.send(users))
-    .catch(next);
-};
-
 const createUser = (req, res, next) => {
   const { name, avatar, email, password } = req.body;
 
@@ -42,16 +36,17 @@ const createUser = (req, res, next) => {
 };
 
 const loginUser = (req, res, next) => {
-  User.findUserByCredentials(req.body.email, req.body.password)
+  const { email, password } = req.body;
+
+  User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
         expiresIn: "7d",
       });
-      const { name, email, avatar, _id } = user;
-      res.send({ token, name, email, avatar, _id });
+      res.send({ token });
     })
     .catch((err) => {
-      if (err.name === "InvalidData") {
+      if (err.message === "Incorrect email or password") {
         return next(new UnauthorizedError("Incorrect email or password"));
       }
       return next(err);
@@ -98,7 +93,6 @@ const updateProfile = (req, res, next) => {
 };
 
 module.exports = {
-  getUsers,
   createUser,
   updateProfile,
   getCurrentUser,
